@@ -1,0 +1,123 @@
+import pygame
+import random
+
+# Initialize Pygame
+pygame.init()
+
+# screen settings
+screen_width = 800
+screen_height = 600
+
+# colors
+white = (255, 255, 255)
+black = (0, 0, 0)
+red = (255, 0, 0)
+green = (0, 255, 0)
+
+# basket settings
+basket_width = 100
+basket_height = 80
+basket_color = green
+
+# flower settings
+flower_width = 30
+flower_height = 30
+flower_color = red
+flower_falling_speed = 5
+
+# initializing screen
+screen = pygame.display.set_mode((screen_width,screen_height ))
+pygame.display.set_caption('Catch the Flowers')
+
+# basket class
+class Basket:
+    def __init__(self):
+        self.x = screen_width // 2
+        self.y = screen_height - basket_height
+        self.width = basket_width
+        self.height = basket_height
+        self.color = basket_color
+        self.speed = 10
+
+    def move(self, dx):
+        self.x += dx
+        if self.x < 0:
+            self.x = 0
+        if self.x + self.width > screen_width:
+            self.x = screen_width - self.width
+
+    def draw(self):
+        pygame.draw.rect(screen, self.color, (self.x, self.y, self.width, self.height))
+
+#flower class
+class Flower:
+    def __init__(self):
+        self.x = random.randint(0, screen_width - flower_width)
+        self.y = 0
+        self.width = flower_width
+        self.height = flower_height
+        self.color = flower_color
+        self.speed = flower_falling_speed
+    def fall(self):
+        self.y += self.speed
+
+    def draw(self):
+        pygame.draw.rect(screen, self.color, (self.x, self.y, self.width, self.height))
+
+# game loop
+def main():
+    basket = Basket()
+    flowers = []
+    score = 0
+    missed = 0
+    max_missed = 10
+    clock = pygame.time.Clock()
+    font = pygame.font.Font(None, 36)
+
+    running = True
+    while running:
+        screen.fill(WHITE)
+        
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+
+        keys = pygame.key.get_pressed()
+        if keys[pygame.K_LEFT]:
+            basket.move(-basket.speed)
+        if keys[pygame.K_RIGHT]:
+            basket.move(basket.speed)
+
+        if random.randint(1, 20) == 1:
+            flowers.append(Flower())
+
+        for flower in flowers[:]:
+            flower.fall()
+            if flower.y >screen_height:
+                flowers.remove(flower)
+                missed += 1
+                if missed >= max_missed:
+                    running = False
+            elif (basket.y < flower.y + flower.height and
+                  basket.y + basket.height > flower.y and
+                  basket.x < flower.x + flower.width and
+                  basket.x + basket.width > flower.x):
+                flowers.remove(flower)
+                score += 1
+
+        basket.draw()
+        for flower in flowers:
+            flower.draw()
+
+        score_text = font.render(f'Score: {score}', True, black)
+        missed_text = font.render(f'Missed: {missed}', True, black)
+        screen.blit(score_text, (10, 10))
+        screen.blit(missed_text, (10, 50))
+
+        pygame.display.flip()
+        clock.tick(30)
+
+    pygame.quit()
+
+if __name__ == '__main__':
+    main()
